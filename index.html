@@ -1,11 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-    </head>
-    <body>
-        <h1>hello world!</h1>
-    </body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculator</title>
+    <!-- <link rel="stylesheet" href="style.css" /> -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .calculator {
+        background: #1c1c1c;
+        border-radius: 20px;
+        width: 350px;
+        padding: 25px;
+      }
+
+      .display {
+        color: white;
+        background: #000;
+        margin-bottom: 20px;
+        padding: 20px;
+        border-radius: 20px;
+        font-size: 2.5em;
+        overflow: hidden;
+        text-align: right;
+      }
+
+      .buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-gap: 15px;
+      }
+
+      .button {
+        padding: 20px;
+        background: #333;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5em;
+        transition: background-color 0.3s ease;
+        cursor: pointer;
+      }
+
+      .button:active {
+        background-color: #666;
+      }
+
+      .button.zero {
+        grid-column: span 2;
+        border-radius: 50px;
+      }
+
+      .button.operator,
+      .button.equals {
+        background-color: #ff9500;
+        color: white;
+      }
+
+      .button.operator:active,
+      .button.equals:active {
+        background-color: #e68900;
+      }
+
+      .clear {
+        background-color: #a6a6a6;
+      }
+
+      .clear:active {
+        background-color: #8e8e8e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="calculator">
+      <div class="display" id="display">0</div>
+      <div class="buttons">
+        <div class="button clear" onclick="clearDisplay()">C</div>
+        <div class="button plus-minus" onclick="plusMinus()">+/-</div>
+        <div class="button percent">%</div>
+        <div class="button operator" onclick="setOperator('÷')">÷</div>
+        <div class="button number" onclick="appendNumber('7')">7</div>
+        <div class="button number" onclick="appendNumber('8')">8</div>
+        <div class="button number" onclick="appendNumber('9')">9</div>
+        <div class="button operator" onclick="setOperator('×')">×</div>
+        <div class="button number" onclick="appendNumber('4')">4</div>
+        <div class="button number" onclick="appendNumber('5')">5</div>
+        <div class="button number" onclick="appendNumber('6')">6</div>
+        <div class="button operator" onclick="setOperator('-')">-</div>
+        <div class="button number" onclick="appendNumber('1')">1</div>
+        <div class="button number" onclick="appendNumber('2')">2</div>
+        <div class="button number" onclick="appendNumber('3')">3</div>
+        <div class="button operator" onclick="setOperator('+')">+</div>
+        <div class="button number zero" onclick="appendNumber('0')">0</div>
+        <div class="button number" onclick="appendDecimal('.')">.</div>
+        <div class="button equals" onclick="calculate()">=</div>
+      </div>
+    </div>
+    <!-- <script src="script.js"></script> -->
+    <script>
+      let currentInput = "0";
+      let previousInput = "";
+      let operation = null;
+      let shouldResetInput = false;
+
+      function appendNumber(number) {
+        if (currentInput === "0" || shouldResetInput) {
+          currentInput = number;
+          shouldResetInput = false;
+        } else {
+          currentInput += number;
+        }
+        updateDisplay();
+      }
+
+      function appendDecimal() {
+        if (!currentInput.includes(".")) {
+          currentInput += ".";
+        }
+        updateDisplay();
+      }
+
+      function clearDisplay() {
+        currentInput = "0";
+        previousInput = "";
+        operation = null;
+        shouldResetInput = false;
+        updateDisplay();
+      }
+
+      function plusMinus() {
+        if (currentInput.startsWith("-")) {
+          currentInput = currentInput.substring(1);
+        } else {
+          currentInput = `-${currentInput}`;
+        }
+        updateDisplay();
+      }
+
+      function setOperator(op) {
+        if (operation !== null) calculate();
+        operation = op;
+        previousInput = currentInput;
+        shouldResetInput = true;
+      }
+
+      function calculate() {
+        if (operation === null || shouldResetInput || previousInput === "") return;
+
+        if (operation === "×") operation = "*";
+        else if (operation === "÷") operation = "/";
+        // Encode the parameters to be sent in the URL
+        const params = new URLSearchParams({
+          num1: previousInput,
+          num2: currentInput,
+          sign: operation,
+        });
+
+        fetch(`calc.php?${params}`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.text();
+          })
+          .then((result) => {
+            currentInput = result;
+            operation = null;
+            shouldResetInput = true;
+            updateDisplay();
+          })
+          .catch((error) => {
+            console.error("There has been a problem with your fetch operation:", error);
+          });
+
+        // Prepare for the next operation
+        previousInput = "";
+      }
+
+      function updateDisplay() {
+        const display = document.getElementById("display");
+        display.textContent = currentInput;
+      }
+
+      // Call clearDisplay on startup to initialize everything
+      clearDisplay();
+    </script>
+  </body>
 </html>
